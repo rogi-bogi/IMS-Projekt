@@ -1,3 +1,0 @@
-C:/Users/Kacper/CLionProjects/IMS-Projekt/cmake-build-debug/CMakeFiles/IMS_Projekt.dir
-C:/Users/Kacper/CLionProjects/IMS-Projekt/cmake-build-debug/CMakeFiles/edit_cache.dir
-C:/Users/Kacper/CLionProjects/IMS-Projekt/cmake-build-debug/CMakeFiles/rebuild_cache.dir
