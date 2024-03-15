@@ -1,5 +1,4 @@
-
-#ignore hidden files
 \.*
 !.gitignore
 build/*
+!.clang-format
