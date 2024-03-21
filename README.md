@@ -16,3 +16,9 @@ Co sie stanie po odwrotnej transformacie fouriera?
 * Poczytać do czego stosujemy fouriera w obrazach
 * Wavelet - inny rodzaj analizy obrazów
 * Window fourier transform - spektrogramn (może sie nie przydać)
+
+# Zadania do zrobienia
+* ~~Uporządkowanie headerów~~
+* ~~Fourier~~
+* Spektrogram
+* Operacje na fourierze
