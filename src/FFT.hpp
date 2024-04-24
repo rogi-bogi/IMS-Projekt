@@ -1,3 +1,9 @@
+/*
+  FFT.hpp
+    Our own FFT functionaity.
+    For later matrix operations.
+*/
+
 #pragma once
 
 #include <algorithm>
@@ -31,7 +37,7 @@ unsigned int bitReverse(unsigned int x, int log2n)
   return n;
 }
 
-// Function to perform 1D FFT (adapted from provided code)
+// Function to perform 1D FFT
 void fft(vector<Complex>& data, bool inverse)
 {
   const int n = data.size();

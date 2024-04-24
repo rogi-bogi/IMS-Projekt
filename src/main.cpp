@@ -1,75 +1,10 @@
-#include "FFT.hpp"
 #include <iostream>
-#include <opencv2/core.hpp>
-#include <opencv2/core/mat.hpp>
-#include <opencv2/highgui.hpp>
-#include <opencv2/imgcodecs.hpp>
-#include <opencv2/opencv.hpp>
 
-void addNoise(cv::Mat& src)
-{
-  if (src.empty())
-  {
-    return;
-  }
-  cv::Mat noise(src.size(), src.type());
-  constexpr auto mean = 5u;
-  constexpr auto var = 20u;
-  cv::randn(noise, mean, var);
-  src += noise;
-}
+#include "FFT.hpp"
+#include "image_processing.hpp"
+#include "helpers.hpp"
 
-cv::Mat getDftOfBWImage(cv::Mat src)
-{
-  // source: https://docs.opencv.org/4.x/d8/d01/tutorial_discrete_fourier_transform.html
-  cv::Mat paddedImage;
-  uint16_t srcRows = src.rows;
-  uint16_t srcCols = src.cols;
-  uint16_t optimalRows = cv::getOptimalDFTSize(srcRows);
-  uint16_t optimalCols = cv::getOptimalDFTSize(srcCols);
-  cv::copyMakeBorder(src, paddedImage, 0, optimalRows - srcRows, 0, optimalCols - srcCols, cv::BORDER_CONSTANT,
-                     cv::Scalar::all(0));
-
-  cv::Mat planes[] = {cv::Mat_<float>(paddedImage), cv::Mat::zeros(paddedImage.size(), CV_32F)};
-  cv::Mat complexI;
-  cv::merge(planes, 2, complexI); // Add to the expanded another plane with zeros
-
-  cv::dft(complexI, complexI); // this way the result may fit in the source matrix
-
-  cv::split(complexI, planes);                    // planes[0] = Re(DFT(I), planes[1] = Im(DFT(I))
-  cv::magnitude(planes[0], planes[1], planes[0]); // planes[0] = magnitude
-  cv::Mat magI = planes[0];
-
-  magI += cv::Scalar::all(1); // switch to logarithmic scale
-  cv::log(magI, magI);
-
-  // crop the spectrum, if it has an odd number of rows or columns
-  magI = magI(cv::Rect(0, 0, magI.cols & -2, magI.rows & -2));
-
-  // rearrange the quadrants of Fourier image so that the origin is at the image center
-  int cx = magI.cols / 2;
-  int cy = magI.rows / 2;
-
-  cv::Mat q0(magI, cv::Rect(0, 0, cx, cy));   // Top-Left - Create a ROI per quadrant
-  cv::Mat q1(magI, cv::Rect(cx, 0, cx, cy));  // Top-Right
-  cv::Mat q2(magI, cv::Rect(0, cy, cx, cy));  // Bottom-Left
-  cv::Mat q3(magI, cv::Rect(cx, cy, cx, cy)); // Bottom-Right
-
-  cv::Mat tmp; // swap quadrants (Top-Left with Bottom-Right)
-  q0.copyTo(tmp);
-  q3.copyTo(q0);
-  tmp.copyTo(q3);
-
-  q1.copyTo(tmp); // swap quadrant (Top-Right with Bottom-Left)
-  q2.copyTo(q1);
-  tmp.copyTo(q2);
-
-  cv::normalize(magI, magI, 0, 1,
-                cv::NORM_MINMAX); // Transform the matrix with float values into a viewable image form (float between
-                                  // values 0 and 1).
-
-  return magI;
-}
+//TODO: cv::butterworthFilter or cv::chebyshevFilter
 
 int main()
 {
@@ -77,16 +12,50 @@ int main()
   inputImage = cv::imread("../images/lena.png", cv::IMREAD_GRAYSCALE);
   if (inputImage.empty())
   {
+    cout << "Could not read image" << endl;
     return 1;
   }
-  cv::imshow("lena", inputImage);
-  cv::waitKey(0);
+  
+  // Define kernels
+  cv::Mat kernel1 = (cv::Mat_<double>(3,3) << 0, 0, 0, 
+                                              0, 1, 0,
+                                              0, 0, 0);
+  cv::Mat kernel2 = cv::Mat::ones(5,5, CV_64F) / 25;
+  int kernel3_size = 3;
+  cv::Mat kernel4 = (cv::Mat_<double>(3,3) << 0, -1,  0, 
+                                            -1,  5, -1, 
+                                             0, -1,  0);
 
+  // Apply identity filter using kernel1
+  cv::Mat identityImage = applyIdentityFilter(inputImage, kernel1);
+
+  // Apply blur filter using kernel2
+  cv::Mat blurredImage = applyBlurFilter(inputImage, kernel2);
+
+  // Apply Gaussian blur
+  cv::Mat gaussianBlurredImage = applyGaussianBlur(inputImage, kernel3_size);
+
+  // Apply sharpening
+  cv::Mat sharpenedImage = applySharpening(inputImage, kernel4);
+
+  std::vector<cv::Mat> filteredImages = {inputImage, identityImage, blurredImage, gaussianBlurredImage, sharpenedImage};
+  std::vector<std::string> imWindowNames = {"Original", "Identity", "Kernel Blur", "Gaussian Blur", "Sharpening"};
+
+  // Display images
+  displayImages(filteredImages, imWindowNames);
+
+  // Comparing frequency domains
   cv::Mat outputImage = getDftOfBWImage(inputImage);
-  // addNoise(outputImage);
-  cv::imshow("lena after", outputImage);
+  cv::Mat opIdentity = getDftOfBWImage(identityImage);
+  cv::Mat opBlurred = getDftOfBWImage(blurredImage);
+  cv::Mat opGaussianBlurred = getDftOfBWImage(gaussianBlurredImage); 
+  cv::Mat opSharpened = getDftOfBWImage(sharpenedImage); 
 
-  cv::waitKey(0);
+  std::vector<cv::Mat> frequencyDomains = {outputImage, opIdentity, opBlurred, opGaussianBlurred, opSharpened};
+  std::vector<std::string> fdWindowNames = {"Frequency Domain", "Identity FD", "Blurred FD", "Gaussian Blur FD", "Sharpening FD"};
+
+  // Display images
+  displayImages(frequencyDomains, fdWindowNames);
 
   return 0;
 }
