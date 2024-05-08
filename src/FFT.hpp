@@ -1,7 +1,8 @@
 /*
-  FFT.hpp
-    Our own FFT functionaity.
-    For later matrix operations.
+  *FFT.hpp
+    Our own FFT implementation
+  *Possible future use:
+    Displaying image and FD matrices as numbers
 */
 
 #pragma once
