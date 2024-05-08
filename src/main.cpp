@@ -1,5 +1,7 @@
 #include <cmath>
+#include <cstdio>
 #include <iostream>
+#include <opencv2/highgui.hpp>
 
 #include "FFT.hpp"
 #include "helpers.hpp"
@@ -35,7 +37,7 @@ int main()
 {
   Mat imgIn = imread("../images/lena.png", IMREAD_GRAYSCALE);
   imshow("img", imgIn);
-
+  waitKey();
   // Converting from 8-bit to float type suitable for DFT
   imgIn.convertTo(imgIn, CV_32F);
 
@@ -44,55 +46,66 @@ int main()
   calculateDFT(imgIn, DFT_image);
   show_dft_effect(DFT_image);
 
-  // Construct H's (filter matrices)
-  Mat H_1, H_2, H_3, H_4, H_5, H_6;
-  H_1 = construct_H(imgIn, "Ideal LP", 80);    // Low-pass filter
-  H_2 = construct_H(imgIn, "Gaussian LP", 80); // Gaussian low-pass filter
-  H_3 = construct_H(imgIn, "Ideal HP", 50);    // High-pass filter
-  H_4 = construct_H(imgIn, "Gaussian HP", 80); // Gaussian high-pass filter
-  H_5 = construct_H(imgIn, "BandPass", 50);    // Band-pass filter
-  H_6 = construct_H(imgIn, "Notch", 50);       // Notch filter
+  while (true)
+  {
+    destroyAllWindows();
+    // Construct H's (filter matrices)
+    Mat H;
+    int choice;
+    float D0;
+    std::cout << "Choose a filter type (press '0' to exit):\n";
+    std::cout << "1. Ideal LP\n";
+    std::cout << "2. Gaussian LP\n";
+    std::cout << "3. Ideal HP\n";
+    std::cout << "4. Gaussian HP\n";
+    std::cout << "5. BandPass\n";
+    std::cout << "6. Notch\n";
+    std::cout << "Enter your choice (1-6): ";
+    std::cin >> choice;
+    if (choice == 0)
+    {
+      break;
+    }
+    std::cout << "Enter the desired D0 (0-100 makes sense):\n";
+    std::cin >> D0;
 
-  // Apply filtering and display the frequency domains
-  Mat H1_filtered_img, H2_filtered_img, H3_filtered_img, H4_filtered_img, H5_filtered_img, H6_filtered_img;
+    switch (choice)
+    {
+      case 1:
+        H = construct_H(imgIn, "Ideal LP", static_cast<float>(D0));
+        break;
+      case 2:
+        H = construct_H(imgIn, "Gaussian LP", static_cast<float>(D0));
+        break;
+      case 3:
+        H = construct_H(imgIn, "Ideal HP", static_cast<float>(D0));
+        break;
+      case 4:
+        H = construct_H(imgIn, "Gaussian HP", static_cast<float>(D0));
+        break;
+      case 5:
+        H = construct_H(imgIn, "BandPass", static_cast<float>(D0));
+        break;
+      case 6:
+        H = construct_H(imgIn, "Notch", static_cast<float>(D0));
+        break;
+      default:
+        std::cerr << "Invalid choice\n";
+        continue;
+    }
 
-  filtering(DFT_image, H1_filtered_img, H_1);
-  show_dft_effect(H1_filtered_img);
+    // Apply filtering and display the frequency domain
+    Mat filtered_img;
+    filtering(DFT_image, filtered_img, H);
+    show_dft_effect(filtered_img);
 
-  filtering(DFT_image, H2_filtered_img, H_2);
-  show_dft_effect(H2_filtered_img);
+    // Doing a reversed DFT to visualize final effect
+    Mat imgOut = reverseDTF(filtered_img);
+    imshow("Filtered Image", imgOut);
 
-  filtering(DFT_image, H3_filtered_img, H_3);
-  show_dft_effect(H3_filtered_img);
+    if (waitKey(0) == '0')
+      break;
+  }
 
-  filtering(DFT_image, H4_filtered_img, H_4);
-  show_dft_effect(H4_filtered_img);
-
-  filtering(DFT_image, H5_filtered_img, H_5);
-  show_dft_effect(H5_filtered_img);
-
-  filtering(DFT_image, H6_filtered_img, H_6);
-  show_dft_effect(H6_filtered_img);
-
-  // Doing a reversed DFT to visualize final effect
-  Mat imgOut_1 = reverseDTF(H1_filtered_img);
-  imshow("Ideal LP filter", imgOut_1);
-
-  Mat imgOut_2 = reverseDTF(H2_filtered_img);
-  imshow("Gaussian LP filter", imgOut_2);
-
-  Mat imgOut_3 = reverseDTF(H3_filtered_img);
-  imshow("Ideal HP filter", imgOut_3);
-
-  Mat imgOut_4 = reverseDTF(H4_filtered_img);
-  imshow("Gaussian HP filter", imgOut_4);
-
-  Mat imgOut_5 = reverseDTF(H5_filtered_img);
-  imshow("Band Pass filter", imgOut_5);
-
-  Mat imgOut_6 = reverseDTF(H6_filtered_img);
-  imshow("Notch filter", imgOut_6);
-
-  waitKey(0);
   return 0;
 }
