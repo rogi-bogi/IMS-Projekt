@@ -15,6 +15,11 @@ void displayImage(const cv::Mat& image, const std::string& windowName) {
     cv::destroyAllWindows();
 }
 
+// Function to save an image
+void saveImage(const cv::Mat& image, const std::string& filename) {
+    cv::imwrite(filename, image);
+}
+
 // Function to display multiple images
 void displayImages(const std::vector<cv::Mat>& images, const std::vector<std::string>& windowNames) {
     for (size_t i = 0; i < images.size(); ++i) {
@@ -23,9 +28,4 @@ void displayImages(const std::vector<cv::Mat>& images, const std::vector<std::st
     }
     cv::waitKey(0);
     cv::destroyAllWindows();
-}
-
-// Function to save an image
-void saveImage(const cv::Mat& image, const std::string& filename) {
-    cv::imwrite(filename, image);
 }
