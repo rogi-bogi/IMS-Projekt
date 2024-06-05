@@ -21,5 +21,5 @@ Co sie stanie po odwrotnej transformacie fouriera?
 * ~~Uporządkowanie headerów~~
 * ~~Fourier~~
 * Spektrogram
-* Operacje na fourierze:
-    * Funkcja przyjmująca obraz typu cv::Mat, zwracająca obraz poddany transformacie fouriera (tego samego typu).
+* Wavelets (Falki)
+* ~~Operacje na fourierze~~
