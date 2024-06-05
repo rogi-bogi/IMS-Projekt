@@ -29,3 +29,16 @@ void displayImages(const std::vector<cv::Mat>& images, const std::vector<std::st
   cv::waitKey(0);
   cv::destroyAllWindows();
 }
+
+void menuPrompts()
+{
+  cv::destroyAllWindows();
+  std::cout << "Choose a filter type (press '0' to exit):\n";
+  std::cout << "1. Ideal LP\n";
+  std::cout << "2. Gaussian LP\n";
+  std::cout << "3. Ideal HP\n";
+  std::cout << "4. Gaussian HP\n";
+  std::cout << "5. BandPass\n";
+  std::cout << "6. Notch\n";
+  std::cout << "Enter your choice (1-6): ";
+}

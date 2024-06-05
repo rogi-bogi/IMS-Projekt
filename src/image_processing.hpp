@@ -7,40 +7,98 @@
 #include <opencv2/imgproc.hpp>
 #include <opencv2/opencv.hpp>
 
+#include "fftFilters.hpp"
 #include "helpers.hpp"
 
-using namespace cv;
+cv::Mat generateHistogram(const cv::Mat& img)
+{
+  // Establish the number of bins
+  int histSize = 256;
 
-void calculateDFT(Mat& scr, Mat& dst)
+  // Set the range of values
+  float range[] = {0, 256};
+  const float* histRange = {range};
+
+  cv::Mat hist;
+  cv::calcHist(&img, 1, 0, cv::Mat(), hist, 1, &histSize, &histRange, true, false);
+
+  return hist;
+}
+
+void showHistogram(const cv::Mat& img, std::string plotTitle = "Histogram")
+{
+  cv::Mat hist = generateHistogram(img);
+  // Parameters for the histogram image
+  int hist_w = 512;                          // width of the histogram image
+  int hist_h = 400;                          // height of the histogram image
+  int bin_w = cvRound((double)hist_w / 256); // width of each bin
+  cv::Mat histImage(hist_h, hist_w, CV_8UC1, cv::Scalar(255, 255, 255));
+  cv::normalize(hist, hist, 0, histImage.rows, cv::NORM_MINMAX, -1, cv::Mat());
+
+  // Draw the histogram
+  for (int i = 1; i < 256; i++)
+  {
+    cv::line(histImage, cv::Point(bin_w * (i - 1), hist_h - cvRound(hist.at<float>(i - 1))),
+             cv::Point(bin_w * (i), hist_h - cvRound(hist.at<float>(i))), cv::Scalar(0, 0, 0), 2, 8, 0);
+  }
+
+  // Draw axes
+  cv::line(histImage, cv::Point(0, hist_h - 1), cv::Point(hist_w, hist_h - 1), cv::Scalar(0, 0, 0));
+  cv::line(histImage, cv::Point(0, 0), cv::Point(0, hist_h), cv::Scalar(0, 0, 0));
+
+  // Add value markers for the x-axis
+  for (int i = 0; i < 256; i += 32)
+  {
+    cv::line(histImage, cv::Point(bin_w * i, hist_h - 1), cv::Point(bin_w * i, hist_h - 10), cv::Scalar(0, 0, 0));
+    cv::putText(histImage, std::to_string(i), cv::Point(bin_w * i, hist_h - 10), cv::FONT_HERSHEY_SIMPLEX, 0.4,
+                cv::Scalar(0, 0, 0));
+  }
+
+  // Add value markers for the y-axis
+  double minVal, maxVal;
+  cv::minMaxLoc(hist, &minVal, &maxVal);
+  for (int i = 0; i <= 5; i++)
+  {
+    int y = hist_h - (i * hist_h / 5);
+    cv::line(histImage, cv::Point(0, y), cv::Point(10, y), cv::Scalar(0, 0, 0));
+    cv::putText(histImage, std::to_string(cvRound(i * maxVal / 5)), cv::Point(15, y + 5), cv::FONT_HERSHEY_SIMPLEX, 0.4,
+                cv::Scalar(0, 0, 0));
+  }
+
+  // Display the histogram image
+  cv::imshow(plotTitle, histImage);
+}
+
+void calculateDFT(cv::Mat& scr, cv::Mat& dst)
 {
   // define mat consists of two mat, one for real values and the other for complex values
-  Mat planes[] = {scr, Mat::zeros(scr.size(), CV_32F)};
-  Mat complexImg;
+  cv::Mat planes[] = {scr, cv::Mat::zeros(scr.size(), CV_32F)};
+  cv::Mat complexImg;
   merge(planes, 2, complexImg);
   dft(complexImg, complexImg);
   dst = complexImg;
 }
 
 // IDFT
-Mat reverseDTF(Mat filteredFD)
+cv::Mat reverseDTF(cv::Mat filteredFD)
 {
-  Mat imgOut;
-  dft(filteredFD, imgOut, DFT_INVERSE | DFT_REAL_OUTPUT);
-  normalize(imgOut, imgOut, 0, 1, NORM_MINMAX);
+  cv::Mat imgOut;
+  dft(filteredFD, imgOut, cv::DFT_INVERSE | cv::DFT_REAL_OUTPUT);
+  normalize(imgOut, imgOut, 0, 1, cv::NORM_MINMAX);
   return imgOut;
 }
 
-void fftshift(const Mat& input_img, Mat& output_img)
+void fftshift(const cv::Mat& input_img, cv::Mat& output_img)
 {
   output_img = input_img.clone();
   int cx = output_img.cols / 2;
   int cy = output_img.rows / 2;
-  Mat q1(output_img, Rect(0, 0, cx, cy));
-  Mat q2(output_img, Rect(cx, 0, cx, cy));
-  Mat q3(output_img, Rect(0, cy, cx, cy));
-  Mat q4(output_img, Rect(cx, cy, cx, cy));
+  cv::Mat q1(output_img, cv::Rect(0, 0, cx, cy));
+  cv::Mat q2(output_img, cv::Rect(cx, 0, cx, cy));
+  cv::Mat q3(output_img, cv::Rect(0, cy, cx, cy));
+  cv::Mat q4(output_img, cv::Rect(cx, cy, cx, cy));
 
-  Mat temp;
+  cv::Mat temp;
   q1.copyTo(temp);
   q4.copyTo(q1);
   temp.copyTo(q4);
@@ -50,141 +108,83 @@ void fftshift(const Mat& input_img, Mat& output_img)
 }
 
 // Frequency domain filter matrix as "H" (common in literature)
-Mat construct_H(Mat& scr, String type, float D0)
+cv::Mat construct_H(cv::Mat& scr, std::string type, float D0)
 {
   // Matrix filled with 1's (all-pass filter)
-  Mat H(scr.size(), CV_32F, Scalar(1));
+  cv::Mat H(scr.size(), CV_32F, cv::Scalar(1));
   float D = 0;
   if (type == "Ideal LP")
   {
-    for (int u = 0; u < H.rows; u++)
-    {
-      for (int v = 0; v < H.cols; v++)
-      {
-        D = sqrt((u - scr.rows / 2) * (u - scr.rows / 2) + (v - scr.cols / 2) * (v - scr.cols / 2));
-        if (D > D0)
-        {
-          H.at<float>(u, v) = 0;
-        }
-      }
-    }
+    idealLpFilter(scr, H, D, D0);
   }
   else if (type == "Gaussian LP")
   {
-    for (int u = 0; u < H.rows; u++)
-    {
-      for (int v = 0; v < H.cols; v++)
-      {
-        D = sqrt((u - scr.rows / 2) * (u - scr.rows / 2) + (v - scr.cols / 2) * (v - scr.cols / 2));
-        H.at<float>(u, v) = exp(-D * D / (2 * D0 * D0));
-      }
-    }
+    gaussianLpFilter(scr, H, D, D0);
   }
   else if (type == "Ideal HP")
   {
-    for (int u = 0; u < H.rows; u++)
-    {
-      for (int v = 0; v < H.cols; v++)
-      {
-        D = sqrt((u - scr.rows / 2) * (u - scr.rows / 2) + (v - scr.cols / 2) * (v - scr.cols / 2));
-        if (D < D0)
-        {
-          H.at<float>(u, v) = 0;
-        }
-      }
-    }
+    idealHpFilter(scr, H, D, D0);
   }
   else if (type == "Gaussian HP")
   {
-    for (int u = 0; u < H.rows; u++)
-    {
-      for (int v = 0; v < H.cols; v++)
-      {
-        D = sqrt((u - scr.rows / 2) * (u - scr.rows / 2) + (v - scr.cols / 2) * (v - scr.cols / 2));
-        H.at<float>(u, v) = 1 - exp(-D * D / (2 * D0 * D0));
-      }
-    }
+    gaussianHpFilter(scr, H, D, D0);
   }
   else if (type == "BandPass")
   {
-    float D1 = D0 * 0.75;
-    float D2 = D0 * 1.25;
-    for (int u = 0; u < H.rows; u++)
-    {
-      for (int v = 0; v < H.cols; v++)
-      {
-        D = sqrt((u - scr.rows / 2) * (u - scr.rows / 2) + (v - scr.cols / 2) * (v - scr.cols / 2));
-        if (D < D1 || D > D2)
-        {
-          H.at<float>(u, v) = 0;
-        }
-      }
-    }
+    bandPassFilter(scr, H, D, D0);
   }
   else if (type == "Notch")
   {
-    float D1 = D0 * 0.75;
-    float D2 = D0 * 1.25;
-    for (int u = 0; u < H.rows; u++)
-    {
-      for (int v = 0; v < H.cols; v++)
-      {
-        D = sqrt((u - scr.rows / 2) * (u - scr.rows / 2) + (v - scr.cols / 2) * (v - scr.cols / 2));
-        if (D >= D1 && D <= D2)
-        {
-          H.at<float>(u, v) = 0;
-        }
-      }
-    }
+    notchFilter(scr, H, D, D0);
   }
   return H;
 }
 
-void filtering(Mat& scr, Mat& dst, Mat& H)
+void filtering(cv::Mat& scr, cv::Mat& dst, cv::Mat& H)
 {
   fftshift(H, H);
-  Mat planesH[] = {Mat_<float>(H.clone()), Mat_<float>(H.clone())};
+  cv::Mat planesH[] = {cv::Mat_<float>(H.clone()), cv::Mat_<float>(H.clone())};
 
-  Mat planes_dft[] = {scr, Mat::zeros(scr.size(), CV_32F)};
+  cv::Mat planes_dft[] = {scr, cv::Mat::zeros(scr.size(), CV_32F)};
   split(scr, planes_dft);
 
-  Mat planes_out[] = {Mat::zeros(scr.size(), CV_32F), Mat::zeros(scr.size(), CV_32F)};
+  cv::Mat planes_out[] = {cv::Mat::zeros(scr.size(), CV_32F), cv::Mat::zeros(scr.size(), CV_32F)};
   planes_out[0] = planesH[0].mul(planes_dft[0]);
   planes_out[1] = planesH[1].mul(planes_dft[1]);
 
   merge(planes_out, 2, dst);
 }
 
-void show_dft_effect(Mat image)
+void show_dft_effect(cv::Mat image)
 {
   // Expanding input image to optimal size
-  Mat padded;
-  int m = getOptimalDFTSize(image.rows);
-  int n = getOptimalDFTSize(image.cols);
-  copyMakeBorder(image, padded, 0, m - image.rows, 0, n - image.cols, BORDER_CONSTANT, Scalar::all(0));
+  cv::Mat padded;
+  int m = cv::getOptimalDFTSize(image.rows);
+  int n = cv::getOptimalDFTSize(image.cols);
+  copyMakeBorder(image, padded, 0, m - image.rows, 0, n - image.cols, cv::BORDER_CONSTANT, cv::Scalar::all(0));
   /*
     The result of the transformation is complex numbers.
     Displaying this is possible via a magnitude.
         */
-  Mat real, imaginary;
-  Mat planes[] = {real, imaginary};
+  cv::Mat real, imaginary;
+  cv::Mat planes[] = {real, imaginary};
 
   split(padded, planes);
-  Mat mag_image;
+  cv::Mat mag_image;
   magnitude(planes[0], planes[1], mag_image);
 
   // Switch to a logarithmic scale
-  mag_image += Scalar::all(1);
+  mag_image += cv::Scalar::all(1);
   log(mag_image, mag_image);
-  mag_image = mag_image(Rect(0, 0, mag_image.cols & -2, mag_image.rows & -2));
+  mag_image = mag_image(cv::Rect(0, 0, mag_image.cols & -2, mag_image.rows & -2));
 
-  Mat shifted_DFT;
+  cv::Mat shifted_DFT;
   fftshift(mag_image, shifted_DFT);
 
-  normalize(shifted_DFT, shifted_DFT, 0, 1, NORM_MINMAX);
+  normalize(shifted_DFT, shifted_DFT, 0, 1, cv::NORM_MINMAX);
 
   imshow("After DFT", shifted_DFT);
-  waitKey(0);
+  cv::waitKey(0);
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -227,7 +227,7 @@ cv::Mat applySharpening(const cv::Mat& image, const cv::Mat& kernel)
 }
 
 // PREVIOUS BUILT-INS IMPLEMENTATION
-int apply_build_in_functions(Mat& imgIn)
+int apply_build_in_functions(cv::Mat& imgIn)
 {
 
   // Define kernels
