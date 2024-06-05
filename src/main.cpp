@@ -34,34 +34,14 @@ int main(int argc, char** argv) {
   }
 */
 
-int main()
+void menuLoop(cv::Mat& imgIn, cv::Mat& DFT_image)
 {
-  Mat imgIn = imread("../images/lena.png", IMREAD_GRAYSCALE);
-  imshow("img", imgIn);
-  waitKey();
-  // Converting from 8-bit to float type suitable for DFT
-  imgIn.convertTo(imgIn, CV_32F);
-
-  // Calculate DFT
-  Mat DFT_image;
-  calculateDFT(imgIn, DFT_image);
-  show_dft_effect(DFT_image);
-
   while (true)
   {
-    destroyAllWindows();
-    // Construct H's (filter matrices)
-    Mat H;
+    cv::Mat H;
     int choice;
     float D0;
-    std::cout << "Choose a filter type (press '0' to exit):\n";
-    std::cout << "1. Ideal LP\n";
-    std::cout << "2. Gaussian LP\n";
-    std::cout << "3. Ideal HP\n";
-    std::cout << "4. Gaussian HP\n";
-    std::cout << "5. BandPass\n";
-    std::cout << "6. Notch\n";
-    std::cout << "Enter your choice (1-6): ";
+    menuPrompts();
     std::cin >> choice;
     if (choice == 0)
     {
@@ -96,17 +76,40 @@ int main()
     }
 
     // Apply filtering and display the frequency domain
-    Mat filtered_img;
+    cv::Mat filtered_img;
     filtering(DFT_image, filtered_img, H);
     show_dft_effect(filtered_img);
 
     // Doing a reversed DFT to visualize final effect
-    Mat imgOut = reverseDTF(filtered_img);
+    cv::Mat imgOut = reverseDTF(filtered_img);
     imshow("Filtered Image", imgOut);
 
-    if (waitKey(0) == '0')
+    cv::normalize(imgOut, imgOut, 0, 255, cv::NORM_MINMAX);
+    showHistogram(imgOut, "Filtered image histogram");
+
+    if (cv::waitKey(0) == '0')
+    {
       break;
+    }
   }
+}
+
+int main()
+{
+  Mat imgIn = imread("../images/lena.png", IMREAD_GRAYSCALE);
+  imshow("img", imgIn);
+  waitKey();
+  showHistogram(imgIn);
+  waitKey();
+  // Converting from 8-bit to float type suitable for DFT
+  imgIn.convertTo(imgIn, CV_32F);
+
+  // Calculate DFT
+  Mat DFT_image;
+  calculateDFT(imgIn, DFT_image);
+  show_dft_effect(DFT_image);
+
+  menuLoop(imgIn, DFT_image);
 
   return 0;
 }

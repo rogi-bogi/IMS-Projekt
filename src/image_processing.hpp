@@ -10,6 +10,65 @@
 #include "fftFilters.hpp"
 #include "helpers.hpp"
 
+cv::Mat generateHistogram(const cv::Mat& img)
+{
+  // Establish the number of bins
+  int histSize = 256;
+
+  // Set the range of values
+  float range[] = {0, 256};
+  const float* histRange = {range};
+
+  cv::Mat hist;
+  cv::calcHist(&img, 1, 0, cv::Mat(), hist, 1, &histSize, &histRange, true, false);
+
+  return hist;
+}
+
+void showHistogram(const cv::Mat& img, std::string plotTitle = "Histogram")
+{
+  cv::Mat hist = generateHistogram(img);
+  // Parameters for the histogram image
+  int hist_w = 512;                          // width of the histogram image
+  int hist_h = 400;                          // height of the histogram image
+  int bin_w = cvRound((double)hist_w / 256); // width of each bin
+  cv::Mat histImage(hist_h, hist_w, CV_8UC1, cv::Scalar(255, 255, 255));
+  cv::normalize(hist, hist, 0, histImage.rows, cv::NORM_MINMAX, -1, cv::Mat());
+
+  // Draw the histogram
+  for (int i = 1; i < 256; i++)
+  {
+    cv::line(histImage, cv::Point(bin_w * (i - 1), hist_h - cvRound(hist.at<float>(i - 1))),
+             cv::Point(bin_w * (i), hist_h - cvRound(hist.at<float>(i))), cv::Scalar(0, 0, 0), 2, 8, 0);
+  }
+
+  // Draw axes
+  cv::line(histImage, cv::Point(0, hist_h - 1), cv::Point(hist_w, hist_h - 1), cv::Scalar(0, 0, 0));
+  cv::line(histImage, cv::Point(0, 0), cv::Point(0, hist_h), cv::Scalar(0, 0, 0));
+
+  // Add value markers for the x-axis
+  for (int i = 0; i < 256; i += 32)
+  {
+    cv::line(histImage, cv::Point(bin_w * i, hist_h - 1), cv::Point(bin_w * i, hist_h - 10), cv::Scalar(0, 0, 0));
+    cv::putText(histImage, std::to_string(i), cv::Point(bin_w * i, hist_h - 10), cv::FONT_HERSHEY_SIMPLEX, 0.4,
+                cv::Scalar(0, 0, 0));
+  }
+
+  // Add value markers for the y-axis
+  double minVal, maxVal;
+  cv::minMaxLoc(hist, &minVal, &maxVal);
+  for (int i = 0; i <= 5; i++)
+  {
+    int y = hist_h - (i * hist_h / 5);
+    cv::line(histImage, cv::Point(0, y), cv::Point(10, y), cv::Scalar(0, 0, 0));
+    cv::putText(histImage, std::to_string(cvRound(i * maxVal / 5)), cv::Point(15, y + 5), cv::FONT_HERSHEY_SIMPLEX, 0.4,
+                cv::Scalar(0, 0, 0));
+  }
+
+  // Display the histogram image
+  cv::imshow(plotTitle, histImage);
+}
+
 void calculateDFT(cv::Mat& scr, cv::Mat& dst)
 {
   // define mat consists of two mat, one for real values and the other for complex values
@@ -196,19 +255,4 @@ int apply_build_in_functions(cv::Mat& imgIn)
   displayImages(filteredImages, imWindowNames);
 
   return 0;
-}
-
-cv::Mat generateHistogram(const cv::Mat& img)
-{
-  // Establish the number of bins
-  int histSize = 256;
-
-  // Set the range of values
-  float range[] = {0, 256};
-  const float* histRange = {range};
-
-  cv::Mat hist;
-  cv::calcHist(&img, 1, 0, cv::Mat(), hist, 1, &histSize, &histRange, true, false);
-
-  return hist;
 }
