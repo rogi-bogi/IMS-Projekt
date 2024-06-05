@@ -20,6 +20,10 @@ Co sie stanie po odwrotnej transformacie fouriera?
 # Zadania do zrobienia
 * ~~Uporządkowanie headerów~~
 * ~~Fourier~~
-* Spektrogram
-* Operacje na fourierze:
-    * Funkcja przyjmująca obraz typu cv::Mat, zwracająca obraz poddany transformacie fouriera (tego samego typu).
+* Spektrogram do wyświetlenia dla obrazow
+* ~~Operacje na fourierze:~~
+    *  ~~Funkcja przyjmująca obraz typu cv::Mat, zwracająca obraz poddany transformacie fouriera (tego samego typu).~~
+    * Chebyshev, Butterworth + torus ale gładki
+* Wavelet/falkowa
+* Wielomiany Zernike/Zernikego (nie implementować samemu)
+* Slider GUI (optional)
