@@ -41,6 +41,8 @@ void menuLoop(cv::Mat& imgIn, cv::Mat& DFT_image)
     cv::Mat H;
     int choice;
     float D0;
+    int n;
+    float epsilon;
     menuPrompts();
     std::cin >> choice;
     if (choice == 0)
@@ -70,6 +72,18 @@ void menuLoop(cv::Mat& imgIn, cv::Mat& DFT_image)
       case 6:
         H = construct_H(imgIn, "Notch", static_cast<float>(D0));
         break;
+      case 7: // Butterworth LP
+        std::cout << "Enter the order n (Typical values are 1-5):\n";
+        std::cin >> n;
+        H = construct_H(imgIn, "Butterworth LP", static_cast<float>(D0), n);
+        break;
+      case 8: // Chebyshev LP
+        std::cout << "Enter the order n (Typical values are 1-5):\n";
+        std::cin >> n;
+        std::cout << "Enter the ripple factor epsilon (Typical values are 0.1-0.5):\n";
+        std::cin >> epsilon;
+        H = construct_H(imgIn, "Chebyshev LP", static_cast<float>(D0), n, epsilon);
+        break;
       default:
         std::cerr << "Invalid choice\n";
         continue;
@@ -96,16 +110,23 @@ void menuLoop(cv::Mat& imgIn, cv::Mat& DFT_image)
 
 int main()
 {
-  Mat imgIn = imread("../images/lena.png", IMREAD_GRAYSCALE);
+  Mat imgIn;
+  Mat DFT_image;
+
+  
+  const int wdtIter = 2;
+  const int brightnessScale = 1.5;
+  imgIn = imread("../images/lena.png", IMREAD_GRAYSCALE);
+
+  // Wavelets
+  processWavelet(imgIn, wdtIter, brightnessScale);
+
+  // DFT 
   imshow("img", imgIn);
   waitKey();
   showHistogram(imgIn);
   waitKey();
-  // Converting from 8-bit to float type suitable for DFT
-  imgIn.convertTo(imgIn, CV_32F);
-
-  // Calculate DFT
-  Mat DFT_image;
+  
   calculateDFT(imgIn, DFT_image);
   show_dft_effect(DFT_image);
 
@@ -113,14 +134,4 @@ int main()
 
   return 0;
 }
-
-// WAVELETS IMPLEMENTATION
-// int main(int ac, char** av)
-// {
-//     VideoCapture capture(0);
-//     if (!capture.isOpened())
-//     {
-//         return 1;
-//     }
-//     return process(capture);
-// }
+  

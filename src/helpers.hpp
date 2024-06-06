@@ -40,5 +40,7 @@ void menuPrompts()
   std::cout << "4. Gaussian HP\n";
   std::cout << "5. BandPass\n";
   std::cout << "6. Notch\n";
-  std::cout << "Enter your choice (1-6): ";
+  std::cout << "7. Butterworth LP\n";
+  std::cout << "8. Chebyshev LP\n";
+  std::cout << "Enter your choice (1-8): ";
 }
