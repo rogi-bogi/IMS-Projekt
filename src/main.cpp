@@ -1,14 +1,9 @@
-#include <cmath>
-#include <cstdio>
 #include <iostream>
 #include <opencv2/highgui.hpp>
 
-#include "FFT.hpp"
 #include "helpers.hpp"
 #include "image_processing.hpp"
 #include "wavelets.hpp"
-
-using namespace cv;
 
 /*
         TODO: cv::butterworthFilter or cv::chebyshevFilter ??
@@ -110,23 +105,22 @@ void menuLoop(cv::Mat& imgIn, cv::Mat& DFT_image)
 
 int main()
 {
-  Mat imgIn;
-  Mat DFT_image;
+  cv::Mat imgIn;
+  cv::Mat DFT_image;
 
-  
   const int wdtIter = 2;
   const int brightnessScale = 1.5;
-  imgIn = imread("../images/lena.png", IMREAD_GRAYSCALE);
+  imgIn = cv::imread("../images/lena.png", cv::IMREAD_GRAYSCALE);
 
   // Wavelets
   processWavelet(imgIn, wdtIter, brightnessScale);
 
-  // DFT 
+  // DFT
   imshow("img", imgIn);
-  waitKey();
+  cv::waitKey();
   showHistogram(imgIn);
-  waitKey();
-  
+  cv::waitKey();
+
   calculateDFT(imgIn, DFT_image);
   show_dft_effect(DFT_image);
 
@@ -134,4 +128,3 @@ int main()
 
   return 0;
 }
-  

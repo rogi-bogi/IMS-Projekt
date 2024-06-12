@@ -16,13 +16,11 @@
 
 #include <opencv2/opencv.hpp>
 
-using namespace std;
-
 // MACROS
 #define PI 3.1415926536
 
 // TYPEDEF's
-typedef complex<double> Complex; // Complex number representation
+typedef std::complex<double> Complex; // Complex number representation
 
 // Function to reverse bits (same as provided previously)
 unsigned int bitReverse(unsigned int x, int log2n)
@@ -39,7 +37,7 @@ unsigned int bitReverse(unsigned int x, int log2n)
 }
 
 // Function to perform 1D FFT
-void fft(vector<Complex>& data, bool inverse)
+void fft(std::vector<Complex>& data, bool inverse)
 {
   const int n = data.size();
   int log2n = 0;
@@ -48,7 +46,7 @@ void fft(vector<Complex>& data, bool inverse)
     log2n++;
   }
 
-  vector<Complex> temp(n);
+  std::vector<Complex> temp(n);
 
   Complex J(0, (inverse ? -1 : 1));
 
@@ -87,7 +85,7 @@ void fft(vector<Complex>& data, bool inverse)
 }
 
 // Function to perform 2D FFT
-void fft2d(vector<vector<Complex>>& data, bool inverse)
+void fft2d(std::vector<std::vector<Complex>>& data, bool inverse)
 {
   const int rows = data.size();
   const int cols = data[0].size();
@@ -99,7 +97,7 @@ void fft2d(vector<vector<Complex>>& data, bool inverse)
   }
 
   // Transpose the data
-  vector<vector<Complex>> transposed(cols, vector<Complex>(rows));
+  std::vector<std::vector<Complex>> transposed(cols, std::vector<Complex>(rows));
   for (int i = 0; i < rows; ++i)
   {
     for (int j = 0; j < cols; ++j)
@@ -122,7 +120,7 @@ void fft2d(vector<vector<Complex>>& data, bool inverse)
 }
 
 // Function to fill the 2D matrix with sample data
-void fillData(vector<vector<Complex>>& data, int rows, int cols)
+void fillData(std::vector<std::vector<Complex>>& data, int rows, int cols)
 {
   for (int i = 0; i < rows; ++i)
   {
@@ -134,12 +132,12 @@ void fillData(vector<vector<Complex>>& data, int rows, int cols)
 }
 
 // Function to print the 2D complex matrix
-void printMatrix(const vector<vector<Complex>>& data)
+void printMatrix(const std::vector<std::vector<Complex>>& data)
 {
   // Check if there are no rows
   if (data.empty())
   {
-    cout << "Empty matrix" << endl;
+    std::cout << "Empty matrix" << std::endl;
     return;
   }
   // Determine the maximum width for real and imaginary parts
@@ -157,19 +155,19 @@ void printMatrix(const vector<vector<Complex>>& data)
   // Print header row
   for (int i = 0; i < data[0].size(); ++i)
   {
-    cout << std::setw(width) << "Real"
-         << " | " << std::setw(width) << "Imag"
-         << " | ";
+    std::cout << std::setw(width) << "Real"
+              << " | " << std::setw(width) << "Imag"
+              << " | ";
   }
-  cout << endl;
+  std::cout << std::endl;
 
   // Print data rows
   for (const auto& row : data)
   {
     for (const auto& element : row)
     {
-      cout << std::setw(width) << element.real() << " | " << std::setw(width) << element.imag() << " | ";
+      std::cout << std::setw(width) << element.real() << " | " << std::setw(width) << element.imag() << " | ";
     }
-    cout << endl;
+    std::cout << std::endl;
   }
 }
