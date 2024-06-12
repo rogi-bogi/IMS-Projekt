@@ -38,7 +38,7 @@ void menuLoop(cv::Mat& imgIn, cv::Mat& DFT_image)
     float D0;
     int n;
     float epsilon;
-    menuPrompts();
+    helpers::menuPrompts();
     std::cin >> choice;
     if (choice == 0)
     {
@@ -50,34 +50,34 @@ void menuLoop(cv::Mat& imgIn, cv::Mat& DFT_image)
     switch (choice)
     {
       case 1:
-        H = construct_H(imgIn, "Ideal LP", static_cast<float>(D0));
+        H = image_processing::construct_H(imgIn, "Ideal LP", static_cast<float>(D0));
         break;
       case 2:
-        H = construct_H(imgIn, "Gaussian LP", static_cast<float>(D0));
+        H = image_processing::construct_H(imgIn, "Gaussian LP", static_cast<float>(D0));
         break;
       case 3:
-        H = construct_H(imgIn, "Ideal HP", static_cast<float>(D0));
+        H = image_processing::construct_H(imgIn, "Ideal HP", static_cast<float>(D0));
         break;
       case 4:
-        H = construct_H(imgIn, "Gaussian HP", static_cast<float>(D0));
+        H = image_processing::construct_H(imgIn, "Gaussian HP", static_cast<float>(D0));
         break;
       case 5:
-        H = construct_H(imgIn, "BandPass", static_cast<float>(D0));
+        H = image_processing::construct_H(imgIn, "BandPass", static_cast<float>(D0));
         break;
       case 6:
-        H = construct_H(imgIn, "Notch", static_cast<float>(D0));
+        H = image_processing::construct_H(imgIn, "Notch", static_cast<float>(D0));
         break;
       case 7: // Butterworth LP
         std::cout << "Enter the order n (Typical values are 1-5):\n";
         std::cin >> n;
-        H = construct_H(imgIn, "Butterworth LP", static_cast<float>(D0), n);
+        H = image_processing::construct_H(imgIn, "Butterworth LP", static_cast<float>(D0), n);
         break;
       case 8: // Chebyshev LP
         std::cout << "Enter the order n (Typical values are 1-5):\n";
         std::cin >> n;
         std::cout << "Enter the ripple factor epsilon (Typical values are 0.1-0.5):\n";
         std::cin >> epsilon;
-        H = construct_H(imgIn, "Chebyshev LP", static_cast<float>(D0), n, epsilon);
+        H = image_processing::construct_H(imgIn, "Chebyshev LP", static_cast<float>(D0), n, epsilon);
         break;
       default:
         std::cerr << "Invalid choice\n";
@@ -86,15 +86,15 @@ void menuLoop(cv::Mat& imgIn, cv::Mat& DFT_image)
 
     // Apply filtering and display the frequency domain
     cv::Mat filtered_img;
-    filtering(DFT_image, filtered_img, H);
-    show_dft_effect(filtered_img);
+    image_processing::filtering(DFT_image, filtered_img, H);
+    image_processing::show_dft_effect(filtered_img);
 
     // Doing a reversed DFT to visualize final effect
-    cv::Mat imgOut = reverseDTF(filtered_img);
+    cv::Mat imgOut = image_processing::reverseDTF(filtered_img);
     imshow("Filtered Image", imgOut);
 
     cv::normalize(imgOut, imgOut, 0, 255, cv::NORM_MINMAX);
-    showHistogram(imgOut, "Filtered image histogram");
+    image_processing::showHistogram(imgOut, "Filtered image histogram");
 
     if (cv::waitKey(0) == '0')
     {
@@ -113,16 +113,16 @@ int main()
   imgIn = cv::imread("../images/lena.png", cv::IMREAD_GRAYSCALE);
 
   // Wavelets
-  processWavelet(imgIn, wdtIter, brightnessScale);
+  wavelets::processWavelet(imgIn, wdtIter, brightnessScale);
 
   // DFT
   imshow("img", imgIn);
   cv::waitKey();
-  showHistogram(imgIn);
+  image_processing::showHistogram(imgIn);
   cv::waitKey();
 
-  calculateDFT(imgIn, DFT_image);
-  show_dft_effect(DFT_image);
+  image_processing::calculateDFT(imgIn, DFT_image);
+  image_processing::show_dft_effect(DFT_image);
 
   menuLoop(imgIn, DFT_image);
 

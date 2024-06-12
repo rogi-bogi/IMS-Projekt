@@ -10,6 +10,9 @@
 #include "fft_filters.hpp"
 #include "helpers.hpp"
 
+namespace image_processing
+{
+
 cv::Mat generateHistogram(const cv::Mat& img)
 {
   // Establish the number of bins
@@ -264,7 +267,8 @@ int apply_build_in_functions(cv::Mat& imgIn)
   std::vector<std::string> imWindowNames = {"Original", "Identity", "Kernel Blur", "Gaussian Blur", "Sharpening"};
 
   // Display images
-  displayImages(filteredImages, imWindowNames);
+  helpers::displayImages(filteredImages, imWindowNames);
 
   return 0;
 }
+} // namespace image_processing

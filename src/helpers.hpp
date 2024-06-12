@@ -2,6 +2,9 @@
 
 #include <opencv2/opencv.hpp>
 
+namespace helpers
+{
+
 // Function to display an image
 void displayImage(const cv::Mat& image, const std::string& windowName)
 {
@@ -39,3 +42,4 @@ void menuPrompts()
   std::cout << "8. Chebyshev LP\n";
   std::cout << "Enter your choice (1-8): ";
 }
+} // namespace helpers

@@ -16,6 +16,9 @@
 
 #include <opencv2/opencv.hpp>
 
+namespace FFT
+{
+
 // MACROS
 #define PI 3.1415926536
 
@@ -171,3 +174,4 @@ void printMatrix(const std::vector<std::vector<Complex>>& data)
     std::cout << std::endl;
   }
 }
+} // namespace FFT

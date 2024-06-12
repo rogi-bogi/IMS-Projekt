@@ -2,6 +2,9 @@
 
 #include "opencv2/opencv.hpp"
 
+namespace wavelets
+{
+
 // Filter type
 #define NONE 0   // no filter
 #define HARD 1   // hard shrinkage
@@ -171,3 +174,4 @@ void processWavelet(const cv::Mat& img, const int numIter = 3, const int scaleFa
   // Wait for a key press indefinitely
   cv::waitKey();
 }
+} // namespace wavelets
