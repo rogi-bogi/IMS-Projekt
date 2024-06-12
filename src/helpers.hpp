@@ -1,11 +1,9 @@
 #pragma once
 
-#include <opencv2/core.hpp>
-#include <opencv2/core/mat.hpp>
-#include <opencv2/highgui.hpp>
-#include <opencv2/imgcodecs.hpp>
-#include <opencv2/imgproc.hpp>
 #include <opencv2/opencv.hpp>
+
+namespace helpers
+{
 
 // Function to display an image
 void displayImage(const cv::Mat& image, const std::string& windowName)
@@ -44,3 +42,4 @@ void menuPrompts()
   std::cout << "8. Chebyshev LP\n";
   std::cout << "Enter your choice (1-8): ";
 }
+} // namespace helpers
