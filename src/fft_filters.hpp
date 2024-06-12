@@ -89,3 +89,29 @@ void notchFilter(cv::Mat& scr, cv::Mat& H, float D, float D0)
     }
   }
 }
+
+void butterworthLpFilter(cv::Mat& scr, cv::Mat& H, float D, float D0, int n)
+{
+    for (int u = 0; u < H.rows; u++)
+    {
+        for (int v = 0; v < H.cols; v++)
+        {
+            D = sqrt((u - scr.rows / 2) * (u - scr.rows / 2) + (v - scr.cols / 2) * (v - scr.cols / 2));
+            H.at<float>(u, v) = 1 / (1 + pow(D / D0, 2 * n));
+        }
+    }
+}
+
+void chebyshevLpFilter(cv::Mat& scr, cv::Mat& H, float D, float D0, float epsilon, int n)
+{
+    for (int u = 0; u < H.rows; u++)
+    {
+        for (int v = 0; v < H.cols; v++)
+        {
+            D = sqrt((u - scr.rows / 2) * (u - scr.rows / 2) + (v - scr.cols / 2) * (v - scr.cols / 2));
+            float term = pow((D / D0), n);
+            float chebyshevTerm = 1 + pow(epsilon * cosh(term), 2);
+            H.at<float>(u, v) = 1 / sqrt(chebyshevTerm);
+        }
+    }
+}

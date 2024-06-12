@@ -7,7 +7,7 @@
 #include <opencv2/imgproc.hpp>
 #include <opencv2/opencv.hpp>
 
-#include "fftFilters.hpp"
+#include "fft_filters.hpp"
 #include "helpers.hpp"
 
 cv::Mat generateHistogram(const cv::Mat& img)
@@ -71,8 +71,11 @@ void showHistogram(const cv::Mat& img, std::string plotTitle = "Histogram")
 
 void calculateDFT(cv::Mat& scr, cv::Mat& dst)
 {
+  cv::Mat scr32;
+  // Converting from 8-bit to float type suitable for DFT and Wavelets operations
+  scr.convertTo(scr32, CV_32F); 
   // define mat consists of two mat, one for real values and the other for complex values
-  cv::Mat planes[] = {scr, cv::Mat::zeros(scr.size(), CV_32F)};
+  cv::Mat planes[] = {scr32, cv::Mat::zeros(scr.size(), CV_32F)};
   cv::Mat complexImg;
   merge(planes, 2, complexImg);
   dft(complexImg, complexImg);
@@ -108,7 +111,8 @@ void fftshift(const cv::Mat& input_img, cv::Mat& output_img)
 }
 
 // Frequency domain filter matrix as "H" (common in literature)
-cv::Mat construct_H(cv::Mat& scr, std::string type, float D0)
+// Default n and epsilon allow to use function without these values
+cv::Mat construct_H(cv::Mat& scr, std::string type, float D0, int n = 0, float epsilon = 0.0f) 
 {
   // Matrix filled with 1's (all-pass filter)
   cv::Mat H(scr.size(), CV_32F, cv::Scalar(1));
@@ -136,6 +140,14 @@ cv::Mat construct_H(cv::Mat& scr, std::string type, float D0)
   else if (type == "Notch")
   {
     notchFilter(scr, H, D, D0);
+  }
+  else if (type == "Butterworth LP")
+  {
+      butterworthLpFilter(scr, H, D, D0, n);
+  }
+  else if (type == "Chebyshev LP")
+  {
+      chebyshevLpFilter(scr, H, D, D0, epsilon, n);
   }
   return H;
 }
